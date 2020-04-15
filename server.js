@@ -2,8 +2,11 @@ const express = require('express');
 
 const server = express();
 
+// built-in middleware
+server.use(express.json());
+
 server.get('/', (req, res) => {
-  res.send(`<h2>Let's write some middleware!</h2>`);
+  res.send(`<h4>Let's write some middleware!</h4>`);
 });
 
 //custom middleware
