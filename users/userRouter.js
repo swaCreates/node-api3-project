@@ -56,13 +56,25 @@ router.get('/:id/posts', validateUserId(), async (req, res) => {
 });
 
 // DELETE /users/:id (delete user)
-router.delete('/:id', (req, res) => {
-  // do your magic!
+router.delete('/:id', validateUserId(), async (req, res) => {
+  try{
+    await userDB.remove(req.params.id);
+    res.status(204).end();
+  } catch(err){
+    console.log('Error deleting:', err);
+    next(err);
+  }
 });
 
 // PUT /users/:id (update a user)
-router.put('/:id', (req, res) => {
-  // do your magic!
+router.put('/:id', validateUser(), validateUserId(), async (req, res) => {
+  try{
+    const updatedUser= await userDB.update(req.params.id, req.body);
+    res.json(updatedUser);
+  } catch(err){
+    console.log('Error updating user:', err);
+    next(err);
+  }
 });
 
 //custom middleware
