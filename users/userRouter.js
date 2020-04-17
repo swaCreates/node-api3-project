@@ -89,7 +89,7 @@ function validateUserId() {
         next();
       } else{
         res.status(404).json({
-          request_errorMessage: 'Invalid user id'
+          request_errorMessage: 'Invalid user id or user does not exist'
         })
       }
     } catch(err){
