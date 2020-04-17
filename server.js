@@ -20,7 +20,6 @@ server.use(logger)
 server.use(welcome_router);
 server.use('/api/users/posts', posts_router);
 server.use('/api/users', users_router);
-// server.use('/api/users/posts', posts_router);
 
 server.use((req, res) => {
 	res.status(404).send(
