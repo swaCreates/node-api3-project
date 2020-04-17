@@ -18,6 +18,7 @@ server.use(logger)
 
 // route handlers
 server.use(welcome_router);
+server.use('/users', users_router);
 
 server.use((req, res) => {
 	res.status(404).send(
