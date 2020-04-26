@@ -1,47 +1,137 @@
 const express = require('express');
+const userDB= require('./userDb.js');
+const postDB= require('../posts/postDb.js');
 
 const router = express.Router();
 
-router.post('/', (req, res) => {
-  // do your magic!
+// POST /users (create user)
+router.post('/', validateUser(), async (req, res) => {
+  try{
+    const createdUser= await userDB.insert(req.body)
+    res.status(201).json(createdUser);
+  } catch(err){
+    console.log('Error posting:', err);
+    next(err);
+  }
 });
 
-router.post('/:id/posts', (req, res) => {
-  // do your magic!
+// POST /users/:id/posts (create post by user)
+router.post('/:id/posts', validateUserId(), validatePost(), async (req, res) => {
+  try{
+    const createdPost= await postDB.insert({
+      user_id: req.params.id,
+      text: req.body.text, 
+    });
+    res.status(201).json(createdPost);
+  } catch(err){
+    console.log('Error creating post:', err);
+    next(err);
+  }
 });
 
-router.get('/', (req, res) => {
-  // do your magic!
+// GET /users (all users)
+router.get('/', async (req, res) => {
+  try{
+    const usersData= await userDB.get();
+    return res.json(usersData);
+  } catch (err){
+    next(err);
+  }
 });
 
-router.get('/:id', (req, res) => {
-  // do your magic!
+// GET /users/:id (users by id)
+router.get('/:id', validateUserId(), (req, res) => {
+  res.json(req.user);
 });
 
-router.get('/:id/posts', (req, res) => {
-  // do your magic!
+// GET /users/:id/posts (posts by user)
+router.get('/:id/posts', validateUserId(), async (req, res) => {
+  try{
+    const userPost= await userDB.getUserPosts(req.params.id);
+    res.json(userPost);
+  } catch(err){
+    console.log('Error fetching posts:', err);
+    next(err);
+  }
 });
 
-router.delete('/:id', (req, res) => {
-  // do your magic!
+// DELETE /users/:id (delete user)
+router.delete('/:id', validateUserId(), async (req, res) => {
+  try{
+    await userDB.remove(req.params.id);
+    res.status(204).end();
+  } catch(err){
+    console.log('Error deleting:', err);
+    next(err);
+  }
 });
 
-router.put('/:id', (req, res) => {
-  // do your magic!
+// PUT /users/:id (update a user)
+router.put('/:id', validateUser(), validateUserId(), async (req, res) => {
+  try{
+    const updatedUser= await userDB.update(req.params.id, req.body);
+    res.json(updatedUser);
+  } catch(err){
+    console.log('Error updating user:', err);
+    next(err);
+  }
 });
 
 //custom middleware
 
-function validateUserId(req, res, next) {
-  // do your magic!
+// validating a user by its id
+function validateUserId() {
+  return async (req, res, next) =>{
+    try{
+      const usersById= await userDB.getById(req.params.id);
+      if(usersById){
+        req.user= usersById;
+        next();
+      } else{
+        res.status(404).json({
+          request_errorMessage: 'Invalid user id or user does not exist'
+        })
+      }
+    } catch(err){
+      console.log(err);
+      next(err);
+    }
+  }
 }
 
-function validateUser(req, res, next) {
-  // do your magic!
+// validating if the user properly sent name data or none at all
+function validateUser() {
+  return (req, res, next) =>{
+    if(!req.body){
+      return res.status(400).json({
+        error_message: 'Missing user data',
+      })
+    } else if(!req.body.name){
+      return res.status(400).json({
+        error_message: 'Missing required name field',
+      })
+    } else{
+      next();
+    }
+  } 
 }
 
-function validatePost(req, res, next) {
-  // do your magic!
+// validating the users post body is filled and that there is a text property
+function validatePost() {
+  return (req, res, next) => {
+    if(!req.body){
+      return res.status(400).json({
+        error_message: 'Missing post data',
+      })
+    }
+    else if(!req.body.text){
+      return res.status(400).json({
+        error_message: 'Missing required text field',
+      })
+    } else{
+      next();
+    }
+  }
 }
 
 module.exports = router;
